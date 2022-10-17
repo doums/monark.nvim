@@ -95,7 +95,7 @@ local function set_extmark(config, text, hl)
     id = extmark_id,
     virt_text = { { text, hl } },
     virt_text_pos = col == -1 and 'eol' or 'overlay',
-    hl_mode = 'combine',
+    hl_mode = config.hl_mode or 'combine',
   })
 end
 
@@ -145,6 +145,8 @@ function M.init(config)
         local result = api.nvim_buf_get_extmark_by_id(0, ns_id, extmark_id, {})
         if not vim.tbl_isempty(result) then
           -- Only update the mode position when the extmark is drawn
+          -- TODO instead of using local variables for current
+          -- mark text and hl, use the values from nvim_buf_get_extmark_by_id
           set_extmark(config, _text, _hl)
         end
       end,
