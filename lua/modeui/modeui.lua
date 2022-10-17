@@ -13,9 +13,6 @@ local group_id = api.nvim_create_augroup('modeui', {})
 local ns_id = api.nvim_create_namespace('modeui')
 local extmark_id = 1
 local timer = uv.new_timer()
-local _text
-local _hl
-local _timeout
 
 local normal_modes =
   { 'n', 'no', 'nov', 'noV', 'no', 'niI', 'niR', 'niV', 'nt', 'ntT' }
@@ -89,11 +86,11 @@ local function find_pos(offset, initial)
   return { cursor_row - 1, col }
 end
 
-local function set_extmark(config, text, hl)
+local function set_extmark(config, virt_text)
   local row, col = unpack(find_pos(config.offset, config.offset))
   api.nvim_buf_set_extmark(0, ns_id, row, col, {
     id = extmark_id,
-    virt_text = { { text, hl } },
+    virt_text = { virt_text },
     virt_text_pos = col == -1 and 'eol' or 'overlay',
     hl_mode = config.hl_mode or 'combine',
   })
@@ -131,9 +128,9 @@ function M.init(config)
       if vim.tbl_contains(config.ignore, mode) then
         return
       end
-      _text, _hl, _timeout = unpack(get_mode_render(config.map, mode))
-      set_extmark(config, _text, _hl)
-      defer_clear(_timeout or config.timeout, api.nvim_get_current_buf())
+      local text, hl, timeout = unpack(get_mode_render(config.map, mode))
+      set_extmark(config, { text, hl })
+      defer_clear(timeout or config.timeout, api.nvim_get_current_buf())
     end,
   })
 
@@ -142,12 +139,15 @@ function M.init(config)
       group = group_id,
       pattern = '*',
       callback = function()
-        local result = api.nvim_buf_get_extmark_by_id(0, ns_id, extmark_id, {})
+        local result = api.nvim_buf_get_extmark_by_id(
+          0,
+          ns_id,
+          extmark_id,
+          { details = true }
+        )
         if not vim.tbl_isempty(result) then
           -- Only update the mode position when the extmark is drawn
-          -- TODO instead of using local variables for current
-          -- mark text and hl, use the values from nvim_buf_get_extmark_by_id
-          set_extmark(config, _text, _hl)
+          set_extmark(config, result[3].virt_text[1])
         end
       end,
     })
