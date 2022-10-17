@@ -7,18 +7,19 @@ Show mode changes right next to the cursor.
 In vim, the main thing we do is switch modes.
 I like to have some sort of feedback when I switch modes,
 especially when entering in insert mode.
-I noticed that having to look at somewhere far from the cursor
-position to check the current mode like at the very bottom
-in a status bar, costs a little effort each time and could be
-uncomfortable in a long run.
+I noticed that having to look away from the cursor location
+to get current mode feedback, then focus back on cursor, like at 
+the very bottom in a status bar, costs a little effort each time 
+and could be uncomfortable in a long run.
 
 I could use the `guicursor` option but it does not play well with
 the terminal I use, at least for the cursor color.
 
-So I decided to make _modeui_. This small plugin just put
-an extmark close to the cursor whenever you switch mode.
-It's visual and right next to the main focused place: the cursor.
-No need to look elsewhere.
+So I decided to make _modeui_. This small plugin just draws an
+extmark representing the current mode, right next to the cursor,
+whenever you switch mode.
+It's visual and in a central place, the main focused area.
+It prevents the eyestrain from having to look away and focus back.
 Also the UI must be the least distracting. So I added a timeout
 logic, to automatically hide the mark after a small amount of time.
 
@@ -55,9 +56,9 @@ require('modeui').setup({
   -- (see below), in this case the individual timeout values take
   -- precedence
   timeout = 300,
-  -- Text and highlight group map for each mode. Each mode
-  -- table can takes a third item which is its specific timeout
-  -- value
+  -- Text, highlight group and timeout map.
+  -- Each mode table can takes a third item which is its specific
+  -- timeout value
   map = {
     normal = { '⭘', 'modeuiNormal' },
     visual = { '◆', 'modeuiVisual' },
@@ -78,6 +79,9 @@ require('modeui').setup({
 
 All default configuration values are listed
 [here](https://github.com/doums/modeui.nvim/blob/main/lua/modeui/config.lua).
+
+### TODO
+- add support for `offset` and `hl_mode` by mode
 
 ### License
 

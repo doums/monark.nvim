@@ -22,9 +22,9 @@ local _config = {
   -- (see below), in this case the individual timeout values take
   -- precedence
   timeout = 300,
-  -- Text and highlight group map for each mode. Each mode
-  -- table can takes a third item which is its specific timeout
-  -- value
+  -- Text, highlight group and timeout map.
+  -- Each mode table can takes a third item which is its specific
+  -- timeout value
   map = {
     normal = { '⭘', 'modeuiNormal' },
     visual = { '◆', 'modeuiVisual' },
