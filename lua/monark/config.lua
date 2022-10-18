@@ -13,47 +13,41 @@ local _config = {
   -- Enable or not sticky mode. In sticky mode, the mode mark will
   -- move along with the cursor
   sticky = true,
-  -- Mark offset position relative to the cursor. A negative
-  -- number will draw the mark to the left of the cursor,
+  -- Default mark offset relative to the cursor position. A
+  -- negative number will draw the mark to the left of the cursor,
   -- a positive number to the right, 0 on top of it
+  -- It can be set by mode (see below), if set the specific
+  -- offset take precedence
   offset = 1,
   -- Default timeout (ms) after which the mode mark will be removed.
-  -- Note that it can be set individually for each mode
-  -- (see below), in this case the individual timeout values take
-  -- precedence
+  -- It can be set by mode (see below), if set the specific
+  -- timeout take precedence
   timeout = 300,
-  -- Text, highlight group and timeout map.
-  -- Each mode table can takes a third item which is its specific
-  -- timeout value
-  map = {
-    normal = { '⭘', 'modeuiNormal' },
-    visual = { '◆', 'modeuiVisual' },
-    v_line = { '━', 'modeuiVisual' },
-    v_block = { '■', 'modeuiVisual' },
-    select = { '■', 'modeuiVisual' },
-    insert = { '❱', 'modeuiInsert' },
-    replace = { '❰', 'modeuiReplace' },
-    command = { '↓', 'modeuiCommand' },
-    prompt = { '↓', 'modeuiCommand' },
-    shell_ex = { '❯', 'modeuiCommand' },
-    terminal = { '❯', 'modeuiInsert' },
+  -- Modes settings. Each mode have a dedicated table to customize
+  -- its mark.
+  -- The first item is the text, the second item is the highlight
+  -- group.
+  -- A specific timeout can be set using the `timeout` key.
+  -- A specific offset can be set using the `offset` key.
+  -- A specific hl_mode can be set using the `hl_mode` key.
+  -- eg. insert = { '❱', 'monarkInsert', offset = -1, timeout = 200 }
+  modes = {
+    normal = { '⭘', 'monarkNormal' },
+    visual = { '◆', 'monarkVisual' },
+    visual_l = { '━', 'monarkVisual' },
+    visual_b = { '■', 'monarkVisual' },
+    select = { '■', 'monarkVisual' },
+    insert = { '❱', 'monarkInsert' },
+    replace = { '❰', 'monarkReplace' },
+    terminal = { '❯', 'monarkInsert' },
   },
   -- Background highlight mode (:h nvim_buf_set_extmark)
+  -- It can be set by mode (see above)
   hl_mode = 'combine',
   -- List of modes to ignore, items are those listed in `:h modes()`
   -- Includes normal familly, visual/select by line, terminal,
   -- shell, command line and prompt
   ignore = {
-    'V',
-    'Vs',
-    'S',
-    't',
-    '!',
-    'r?',
-    'c',
-    'cv',
-    'r',
-    'rm',
     'n',
     'no',
     'nov',
@@ -64,6 +58,16 @@ local _config = {
     'niV',
     'nt',
     'ntT',
+    'V',
+    'Vs',
+    'S',
+    't',
+    '!',
+    'r?',
+    'c',
+    'cv',
+    'r',
+    'rm',
   },
 }
 

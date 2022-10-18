@@ -4,38 +4,34 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local api = vim.api
 local uv = vim.loop
-local hl_fn = require('modeui.util').hl
-local hl_exists = require('modeui.util').hl_exists
+local hl_fn = require('monark.util').hl
+local hl_exists = require('monark.util').hl_exists
 
 local M = {}
 
-local group_id = api.nvim_create_augroup('modeui', {})
-local ns_id = api.nvim_create_namespace('modeui')
+local group_id = api.nvim_create_augroup('monark', {})
+local ns_id = api.nvim_create_namespace('monark')
 local extmark_id = 1
 local timer = uv.new_timer()
+local _offset
+local _hl_mode
 
-local normal_modes =
-  { 'n', 'no', 'nov', 'noV', 'no', 'niI', 'niR', 'niV', 'nt', 'ntT' }
+local normal_modes = { 'n', 'niI', 'niR', 'niV', 'nt', 'ntT' }
 
 local modes_map = {
-  { '^n', 'normal' },
-  { '^v', 'visual' },
-  { '^V', 'v_line' },
-  { '^', 'v_block' },
-  { '^s', 'select' },
-  { '^S', 'select' },
-  { '^', 'select' },
-  { '^i', 'insert' },
-  { '^R', 'replace' },
-  { '^c', 'command' },
-  { '^r', 'prompt' },
-  { '^!', 'shell_ex' },
-  { '^t', 'terminal' },
+  { { 'n', 'niI', 'niR', 'niV', 'nt', 'ntT' }, 'normal' },
+  { { 'v', 'vs' }, 'visual' },
+  { { 'V', 'Vs' }, 'visual_l' },
+  { { '', 's' }, 'visual_b' },
+  { { 's', 'S', '' }, 'select' },
+  { { 'i', 'ic', 'ix' }, 'insert' },
+  { { 'R', 'Rc', 'Rx', 'Rv', 'Rvc', 'Rvx' }, 'replace' },
+  { { 't' }, 'terminal' },
 }
 
 local function get_mode_render(map, mode)
   for _, v in ipairs(modes_map) do
-    if string.find(mode, v[1]) then
+    if vim.tbl_contains(v[1], mode) then
       return map[v[2]]
     end
   end
@@ -86,31 +82,31 @@ local function find_pos(offset, initial)
   return { cursor_row - 1, col }
 end
 
-local function set_extmark(config, virt_text)
-  local row, col = unpack(find_pos(config.offset, config.offset))
+local function set_extmark(data)
+  local row, col = unpack(find_pos(data.offset, data.offset))
   api.nvim_buf_set_extmark(0, ns_id, row, col, {
     id = extmark_id,
-    virt_text = { virt_text },
+    virt_text = { { data.text, data.hl } },
     virt_text_pos = col == -1 and 'eol' or 'overlay',
-    hl_mode = config.hl_mode or 'combine',
+    hl_mode = data.hl_mode,
   })
 end
 
 local function create_hls()
-  if not hl_exists('modeuiNormal') then
-    hl_fn('modeuiNormal', '#c7c7ff', nil, 'bold')
+  if not hl_exists('monarkNormal') then
+    hl_fn('monarkNormal', '#c7c7ff', nil, 'bold')
   end
-  if not hl_exists('modeuiInsert') then
-    hl_fn('modeuiInsert', '#69ff00', nil, 'bold')
+  if not hl_exists('monarkInsert') then
+    hl_fn('monarkInsert', '#69ff00', nil, 'bold')
   end
-  if not hl_exists('modeuiReplace') then
-    hl_fn('modeuiReplace', '#ff0050', nil, 'bold')
+  if not hl_exists('monarkReplace') then
+    hl_fn('monarkReplace', '#ff0050', nil, 'bold')
   end
-  if not hl_exists('modeuiVisual') then
-    hl_fn('modeuiVisual', '#0087ff', nil, 'bold')
+  if not hl_exists('monarkVisual') then
+    hl_fn('monarkVisual', '#0087ff', nil, 'bold')
   end
-  if not hl_exists('modeuiCommand') then
-    hl_fn('modeuiCommand', '#93896c', nil, 'bold')
+  if not hl_exists('monarkCommand') then
+    hl_fn('monarkCommand', '#93896c', nil, 'bold')
   end
 end
 
@@ -128,9 +124,16 @@ function M.init(config)
       if vim.tbl_contains(config.ignore, mode) then
         return
       end
-      local text, hl, timeout = unpack(get_mode_render(config.map, mode))
-      set_extmark(config, { text, hl })
-      defer_clear(timeout or config.timeout, api.nvim_get_current_buf())
+      local data = get_mode_render(config.modes, mode)
+      _offset = data.offset or config.offset
+      _hl_mode = data.hl_mode or config.hl_mode
+      set_extmark({
+        text = data[1],
+        hl = data[2],
+        offset = _offset,
+        hl_mode = _hl_mode,
+      })
+      defer_clear(data.timeout or config.timeout, api.nvim_get_current_buf())
     end,
   })
 
@@ -147,7 +150,13 @@ function M.init(config)
         )
         if not vim.tbl_isempty(result) then
           -- Only update the mode position when the extmark is drawn
-          set_extmark(config, result[3].virt_text[1])
+          local virt_text = result[3].virt_text[1]
+          set_extmark({
+            text = virt_text[1],
+            hl = virt_text[2],
+            offset = _offset,
+            hl_mode = _hl_mode,
+          })
         end
       end,
     })
