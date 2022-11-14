@@ -45,7 +45,9 @@ local function defer_clear(timeout, buffer)
     timeout,
     0,
     vim.schedule_wrap(function()
-      api.nvim_buf_del_extmark(buffer, ns_id, extmark_id)
+      if vim.fn.bufwinnr(buffer) ~= -1 then
+        api.nvim_buf_del_extmark(buffer, ns_id, extmark_id)
+      end
     end)
   )
 end
