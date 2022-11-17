@@ -4,24 +4,9 @@ Show mode changes right next to the cursor.
 
 ### Motivations
 
-In vim, the main thing we do is switch modes.
-I like to have some sort of feedback when I switch modes,
-especially when entering in insert mode.
-I noticed that having to look away from the cursor location
-to get current mode feedback, then focus back on cursor, like at
-the very bottom in a status bar, costs a little effort each time
-and could be uncomfortable in a long run.
-
-I could use the `guicursor` option but it does not play well with
-the terminal I use, at least for the cursor color.
-
-So I decided to make _monark_. This small plugin just draws an
-extmark representing the current mode, right next to the cursor,
-whenever you switch mode.
-It's visual and in a central place, the main focused area.
-It prevents the eyestrain from having to look away and focus back.
-Also the UI must be the least distracting. So I added a timeout
-logic, to automatically hide the mark after a small amount of time.
+In vim, the main thing we do is switch modes and the main focus
+is our cursor. So I wanted a feedback right next to every time
+I switch mode. Then I wrote _monark_.
 
 ### Install
 
