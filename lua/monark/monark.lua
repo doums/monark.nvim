@@ -4,8 +4,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local api = vim.api
 local uv = vim.loop
-local hl_fn = require('monark.util').hl
-local hl_exists = require('monark.util').hl_exists
+local hl_fn = require('monark.utils').hl
+local hl_exists = require('monark.utils').hl_exists
 
 local M = {}
 
