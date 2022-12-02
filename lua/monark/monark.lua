@@ -3,16 +3,17 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local api = vim.api
-local uv = vim.loop
 local hl_fn = require('monark.utils').hl
 local hl_exists = require('monark.utils').hl_exists
+local make_timer = require('monark.timer').timer
 
 local M = {}
 
 local group_id = api.nvim_create_augroup('monark', {})
 local ns_id = api.nvim_create_namespace('monark')
 local extmark_id = 1
-local timer = uv.new_timer()
+local timer = make_timer:new()
+local i_timer = make_timer:new()
 local _offset
 local _hl_mode
 
@@ -41,15 +42,11 @@ local function defer_clear(timeout, buffer)
   if timer:is_active() then
     timer:stop()
   end
-  timer:start(
-    timeout,
-    0,
-    vim.schedule_wrap(function()
-      if api.nvim_buf_is_valid(buffer) then
-        api.nvim_buf_del_extmark(buffer, ns_id, extmark_id)
-      end
-    end)
-  )
+  timer:start(timeout, function()
+    if api.nvim_buf_is_valid(buffer) then
+      api.nvim_buf_del_extmark(buffer, ns_id, extmark_id)
+    end
+  end)
 end
 
 local function find_pos(offset, initial)
@@ -151,7 +148,7 @@ function M.init(config)
           { details = true }
         )
         if not vim.tbl_isempty(result) then
-          -- Only update the mode position when the extmark is drawn
+          -- Only update the mode position when the extmark is shown
           local virt_text = result[3].virt_text[1]
           set_extmark({
             text = virt_text[1],
@@ -163,6 +160,59 @@ function M.init(config)
       end,
     })
   end
+
+  if config.i_idle_to then
+    api.nvim_create_autocmd({ 'CursorHoldI' }, {
+      group = group_id,
+      pattern = '*',
+      callback = function()
+        i_timer:start(config.i_idle_to - vim.o.updatetime, function()
+          local mode = api.nvim_get_mode().mode
+          if vim.tbl_contains(config.ignore, mode) then
+            return
+          end
+          local data = get_mode_render(config.modes, mode)
+          _offset = data.offset or config.offset
+          _hl_mode = data.hl_mode or config.hl_mode
+          set_extmark({
+            text = data[1],
+            hl = data[2],
+            offset = _offset,
+            hl_mode = _hl_mode,
+          })
+        end)
+      end,
+    })
+    api.nvim_create_autocmd({ 'CursorMovedI' }, {
+      group = group_id,
+      pattern = '*',
+      callback = function()
+        -- if the main timer is running do not remove the mark
+        if timer:is_active() then
+          return
+        end
+        local result = api.nvim_buf_get_extmark_by_id(
+          0,
+          ns_id,
+          extmark_id,
+          { details = true }
+        )
+        if not vim.tbl_isempty(result) then
+          i_timer:stop()
+          api.nvim_buf_del_extmark(0, ns_id, extmark_id)
+        end
+      end,
+    })
+  end
+
+  api.nvim_create_autocmd({ 'VimLeavePre' }, {
+    group = group_id,
+    pattern = '*',
+    callback = function()
+      timer:close()
+      i_timer:close()
+    end,
+  })
 end
 
 return M

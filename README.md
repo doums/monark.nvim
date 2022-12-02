@@ -42,6 +42,11 @@ require('monark').setup({
   -- It can be set by mode (see below), if set the specific
   -- timeout take precedence
   timeout = 300,
+  -- In insert mode, timeout (ms) after which the mode mark will
+  -- be shown if the cursor is idle for this period.
+  -- Must be set to a value greater than `timeout`.
+  -- Set to nil to disable this feature.
+  i_idle_to = 1000,
   -- Modes settings. Each mode have a dedicated table to customize
   -- its mark.
   -- The first item is the text, the second item is the highlight
