@@ -1,6 +1,6 @@
---[[ This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 local api = vim.api
 local hl_fn = require('monark.utils').hl
@@ -124,6 +124,9 @@ function M.init(config)
         return
       end
       local data = get_mode_render(config.modes, mode)
+      if not data then
+        return
+      end
       _offset = data.offset or config.offset
       _hl_mode = data.hl_mode or config.hl_mode
       set_extmark({
