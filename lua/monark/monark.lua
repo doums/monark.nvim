@@ -28,6 +28,9 @@ local modes_map = {
   { { 'i', 'ic', 'ix' }, 'insert' },
   { { 'R', 'Rc', 'Rx', 'Rv', 'Rvc', 'Rvx' }, 'replace' },
   { { 't' }, 'terminal' },
+  -- support for leap.nvim
+  { { 'leap_f' }, 'leap_f' },
+  { { 'leap_b' }, 'leap_b' },
 }
 
 local function get_mode_render(map, mode)
@@ -107,6 +110,34 @@ local function create_hls()
   if not hl_exists('monarkCommand') then
     hl_fn('monarkCommand', '#93896c', nil, 'bold')
   end
+  if not hl_exists('monarkLeap') then
+    hl_fn('monarkLeap', '#df4a00', nil, 'bold')
+  end
+end
+
+local function draw_mark(config, mode)
+  if config.clear_on_normal and vim.tbl_contains(normal_modes, mode) then
+    api.nvim_buf_del_extmark(0, ns_id, extmark_id)
+    return
+  end
+  if vim.tbl_contains(config.ignore, mode) then
+    return
+  end
+  local data = get_mode_render(config.modes, mode)
+  if not data then
+    return
+  end
+  _offset = data.offset or config.offset
+  _hl_mode = data.hl_mode or config.hl_mode
+  set_extmark({
+    text = data[1],
+    hl = data[2],
+    offset = _offset,
+    hl_mode = _hl_mode,
+  })
+  if not data.no_timeout then
+    defer_clear(data.timeout or config.timeout, api.nvim_get_current_buf())
+  end
 end
 
 function M.init(config)
@@ -116,28 +147,26 @@ function M.init(config)
     pattern = '*',
     callback = function()
       local mode = api.nvim_get_mode().mode
-      if config.clear_on_normal and vim.tbl_contains(normal_modes, mode) then
-        api.nvim_buf_del_extmark(0, ns_id, extmark_id)
-        return
-      end
-      if vim.tbl_contains(config.ignore, mode) then
-        return
-      end
-      local data = get_mode_render(config.modes, mode)
-      if not data then
-        return
-      end
-      _offset = data.offset or config.offset
-      _hl_mode = data.hl_mode or config.hl_mode
-      set_extmark({
-        text = data[1],
-        hl = data[2],
-        offset = _offset,
-        hl_mode = _hl_mode,
-      })
-      defer_clear(data.timeout or config.timeout, api.nvim_get_current_buf())
+      draw_mark(config, mode)
     end,
   })
+
+  -- integration support for leap.nvim
+  local s, leap = pcall(function()
+    return require('leap')
+  end, nil)
+  if s then
+    vim.api.nvim_create_autocmd('User', {
+      pattern = { 'LeapEnter', 'LeapLeave' },
+      callback = function(a)
+        if a.match == 'LeapEnter' then
+          draw_mark(config, leap.state.args.backward and 'leap_b' or 'leap_f')
+        else
+          api.nvim_buf_del_extmark(0, ns_id, extmark_id)
+        end
+      end,
+    })
+  end
 
   if config.sticky then
     api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {

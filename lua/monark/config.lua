@@ -35,6 +35,7 @@ local _config = {
   -- A specific timeout can be set using the `timeout` key.
   -- A specific offset can be set using the `offset` key.
   -- A specific hl_mode can be set using the `hl_mode` key.
+  -- `no_timeout` can be given to disable mark wipe
   -- eg. insert = { '❱', 'monarkInsert', offset = -1, timeout = 200 }
   modes = {
     normal = { '⭘', 'monarkNormal' },
@@ -45,6 +46,10 @@ local _config = {
     insert = { '❱', 'monarkInsert' },
     replace = { '❰', 'monarkReplace' },
     terminal = { '❯', 'monarkInsert' },
+    -- optional integration with leap.nvim
+    -- https://github.com/ggandor/leap.nvim
+    leap_f = { '❱', 'monarkLeap', offset = 1 }, -- for `s` (forward motion)
+    leap_b = { '❰', 'monarkLeap', offset = -1 }, -- for `S` (backward motion)
   },
   -- Background highlight mode (:h nvim_buf_set_extmark)
   -- It can be set by mode (see above)
