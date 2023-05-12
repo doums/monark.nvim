@@ -111,7 +111,7 @@ local function create_hls()
     hl_fn('monarkCommand', '#93896c', nil, 'bold')
   end
   if not hl_exists('monarkLeap') then
-    hl_fn('monarkLeap', '#df4a00', nil, 'bold')
+    hl_fn('monarkLeap', '#f00fdd', nil, 'bold')
   end
 end
 
