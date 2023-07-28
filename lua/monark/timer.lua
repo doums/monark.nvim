@@ -7,7 +7,7 @@ local M = {}
 local timer = {}
 
 function timer:new()
-  local instance = { timer = vim.loop.new_timer() }
+  local instance = { timer = vim.uv.new_timer() }
   self.__index = self
   return setmetatable(instance, self)
 end
