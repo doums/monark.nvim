@@ -117,7 +117,7 @@ end
 
 local function draw_mark(config, mode)
   if config.clear_on_normal and vim.tbl_contains(normal_modes, mode) then
-    api.nvim_buf_del_extmark(0, ns_id, extmark_id)
+    pcall(api.nvim_buf_del_extmark, 0, ns_id, extmark_id)
     return
   end
   if vim.tbl_contains(config.ignore, mode) then
