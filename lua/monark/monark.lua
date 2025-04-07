@@ -61,9 +61,10 @@ local function find_pos(offset, initial)
     return { cursor_row - 1, -1 }
   end
   -- Try to find the UTF-32 indexed position
-  local status, result = pcall(vim.str_utfindex, cur_line, cursor_col + offset)
+  local status, result =
+    pcall(vim.str_utfindex, cur_line, 'utf-16', cursor_col + offset)
   if status then
-    col = vim.str_byteindex(cur_line, result)
+    col = vim.str_byteindex(cur_line, 'utf-16', result)
   elseif offset >= 0 and initial >= 0 then
     -- If the initial offset is positive (mode drawing to the
     -- right), and attempting to draw it fails, first try by
